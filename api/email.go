@@ -20,7 +20,7 @@ func (server *Server) subscribeEmail(ctx *gin.Context) {
 	var req subscribeEmailRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.Status(http.StatusBadRequest)
 		return
 	}
 
@@ -28,15 +28,15 @@ func (server *Server) subscribeEmail(ctx *gin.Context) {
 
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == "unique_violation" {
-			ctx.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			ctx.Status(http.StatusConflict)
 			return
 
 		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.Status(http.StatusInternalServerError)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"description": "E-mail was successfully added"})
+	ctx.Status(http.StatusOK)
 }
 
 // Handler for sending exchange rate information to emails
@@ -45,20 +45,20 @@ func (server *Server) sendEmails(ctx *gin.Context) {
 	emailsList, err := server.store.ListEmails(ctx)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.Status(http.StatusInternalServerError)
 		return
 	}
 
 	rate, err := util.FetchRateData(server.config.RateAPIKey)
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.Status(http.StatusBadRequest)
 		return
 	}
 
 	server.sendEmailsToEveryone(*rate, emailsList)
 
-	ctx.JSON(http.StatusOK, gin.H{"description": "E-mails have been sent successfully"})
+	ctx.Status(http.StatusOK)
 
 }
 
